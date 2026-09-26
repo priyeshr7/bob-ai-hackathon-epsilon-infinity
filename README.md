@@ -8,10 +8,10 @@
 
 | Field | Value |
 |---|---|
-| **Team Name** | [Your Team Name] |
-| **Track** | [AI / DevOps / Sustainability / Open] |
-| **Team Lead** | [Name] — [email@ibm.com] |
-| **Members** | [Name 1], [Name 2], [Name 3] |
+| **Team Name** |[Epsilon Infinity ]|
+| **Track** | [ Forensic Science] |
+| **Team Lead** | [Priyesh Raj] — [Priyeshr067@gmail.com] |
+| **Members** | [Gopal Gawande], [Praveen Gundyagol]|
 
 ---
 
@@ -19,7 +19,9 @@
 
 > In 2–3 sentences: What problem does your project solve? Who experiences this problem?
 
-[Describe the real-world problem your project addresses. Be specific about who the user is and what pain point they face.]
+[Crime scene investigators are routinely overwhelmed by volume — the 2019 Hyderabad veterinarian murder case alone produced 3,000+ photos and 200+ physical items — with no systematic way to decide what gets examined first. Without prioritization, perishable, high-value evidence (a DNA-bearing cigarette butt was nearly missed in that case) can be buried under low-value items, while backlogged Forensic Science Laboratories (FSLs) add weeks of delay on top.
+
+]
 
 ---
 
@@ -27,17 +29,23 @@
 
 > In 2–3 sentences: What did you build? How does it solve the problem above?
 
-[Describe your solution clearly. Explain the core mechanism — what makes it work.]
+[We built **EvidencePro**, an AI-powered evidence triage assistant with two engines, both running on IBM watsonx.ai. For photos, watsonx's Granite Vision model scans crime scene images and flags probable evidence categories and time-sensitive items directly. For written item lists, watsonx's Granite text model extracts only observable facts from each description (not a priority judgment), which a trained decision tree then classifies deterministically — returning the exact split-by-split reasoning behind every ranking, so investigators get a fully explainable, ranked FSL submission schedule instead of a black-box score.
+]
 
 ---
 
 ## ✨ Key Features
 
-- **Feature 1:** [Brief description — e.g., "Real-time anomaly detection using watsonx.ai"]
-- **Feature 2:** [Brief description]
-- **Feature 3:** [Brief description]
-- **Feature 4:** [Optional]
-- **Feature 5:** [Optional]
+- **Feature 1:** [**Vision-based photo triage:** IBM watsonx.ai's Granite Vision model scans crime scene photographs directly and classifies each into a forensic evidence category, targeting the exact "3,000-photo, missed cigarette butt" failure mode from the Hyderabad case.
+]
+- **Feature 2:** [**Explainable decision-tree prioritization:** A trained `DecisionTreeClassifier` assigns each item's priority tier and returns the literal sequence of yes/no splits it followed — every "why is this Critical?" has a concrete, auditable answer instead of an opaque LLM-generated score.
+]
+- **Feature 3:** [**Gen AI narrowed to fact-extraction, not judgment:** watsonx's Granite text model only pulls structured, observable features from free text (is it biological? exposed to weather? a locked device?) — keeping the AI's role low-risk while the tree does all actual prioritizing.
+]
+- **Feature 4:** [**Perishability-aware urgency flagging:** Both engines flag time-sensitive evidence (DNA degradation, volatile accelerants, devices at risk of battery loss or remote wipe) so fragile evidence surfaces regardless of raw score.
+]
+- **Feature 5:** [**Ranked, tiered FSL schedule:** Outputs a Critical/High/Standard/Low examination schedule with per-category FSL section and turnaround estimates, built iteratively by running every item through the tree and sorting the results.
+]
 
 ---
 
@@ -45,11 +53,11 @@
 
 | Category | Technologies |
 |---|---|
-| **Languages** | [e.g., Python, TypeScript] |
-| **Frameworks** | [e.g., FastAPI, React] |
-| **IBM Technologies** | [e.g., watsonx.ai, IBM Bob, IBM Cloud] |
-| **Databases** | [e.g., PostgreSQL, Redis] |
-| **Other** | [e.g., Docker, GitHub Actions] |
+| **Languages** | [Python, JavaScript, HTML, CSS] |
+| **Frameworks** | [Flask, Flask-CORS] |
+| **IBM Technologies** | [] |
+| **Databases** | [None — stateless request/response pipeline ] |
+| **Other** | [scikit-learn (trained `DecisionTreeClassifier`), joblib (model serialization)] |
 
 ---
 
