@@ -9,7 +9,7 @@
 | Field | Value |
 |---|---|
 | **Team Name** |[Epsilon Infinity ]|
-| **Track** | [ Forensic Science] |
+| **Track** | [ AI] |
 | **Team Lead** | [Priyesh Raj] — [Priyeshr067@gmail.com] |
 | **Members** | [Gopal Gawande], [Praveen Gundyagol]|
 
@@ -124,6 +124,6 @@ cp .env.example .env
 
 ## 🏅 What We're Most Proud Of
 
-[Tell the judges what part of your submission is strongest and worth paying close attention to.]
+[We are doing the crazy work out here , everything is absolute legendary.]
 
 ---

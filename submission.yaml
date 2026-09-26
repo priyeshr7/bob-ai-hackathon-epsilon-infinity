@@ -10,7 +10,7 @@
 
 team:
   name: "Epsilon Infinity"                             # REQUIRED — e.g., "Orion Squad"
-  track: "Forensic Science"                            # REQUIRED — one of: AI | DevOps | Sustainability | Open
+  track: "AI"                            # REQUIRED — one of: AI | DevOps | Sustainability | Open
   lead: 
     name: "Priyesh Raj"                           # REQUIRED — e.g., "Alice Chen"
     email: "priyeshr067@gmail.com"                          # REQUIRED — e.g., "alice.chen@ibm.com"
