@@ -29,7 +29,7 @@
 
 > In 2–3 sentences: What did you build? How does it solve the problem above?
 
-[We built **EvidencePro**, an AI-powered evidence triage assistant with two engines, both running on IBM watsonx.ai. For photos, watsonx's Granite Vision model scans crime scene images and flags probable evidence categories and time-sensitive items directly. For written item lists, watsonx's Granite text model extracts only observable facts from each description (not a priority judgment), which a trained decision tree then classifies deterministically — returning the exact split-by-split reasoning behind every ranking, so investigators get a fully explainable, ranked FSL submission schedule instead of a black-box score.
+[We built **Evidence Pro**, an AI-powered evidence triage assistant with two engines, both running on IBM watsonx.ai. For photos, watsonx's Granite Vision model scans crime scene images and flags probable evidence categories and time-sensitive items directly. For written item lists, watsonx's Granite text model extracts only observable facts from each description (not a priority judgment), which a trained decision tree then classifies deterministically — returning the exact split-by-split reasoning behind every ranking, so investigators get a fully explainable, ranked FSL submission schedule instead of a black-box score.
 ]
 
 ---
