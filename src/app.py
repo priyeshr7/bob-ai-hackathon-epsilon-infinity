@@ -41,6 +41,8 @@ import streamlit as st
 # Ensure src/ is on the path when launched from project root
 sys.path.insert(0, os.path.dirname(__file__))
 
+from extractor import extract_features, extraction_mode_label, is_watsonx_available
+
 from models.evidence_item import (
     EvidenceItem, CaseContext, EVIDENCE_TYPES, OFFENCE_TYPES, PRIORITY_LABELS
 )
@@ -85,6 +87,8 @@ def _init_state():
         "item_counter":    0,           # used to generate unique item IDs
         "triage_run":      False,       # True once Run Triage has been clicked
         "schedule_built":  False,
+        "_extraction":     {},          # last extract_features() result (pre-fill cache)
+        "_extract_desc":   "",          # description that was last extracted
     }
     for key, val in defaults.items():
         if key not in st.session_state:
@@ -273,9 +277,9 @@ with tab1:
 with tab2:
     st.header("Step 2 — Evidence Items")
     st.caption(
-        "Enter one or more evidence items. For each item, provide the PDES "
-        "dimension values and secondary features. These are used directly by "
-        "the ML model."
+        "Enter one or more evidence items. Optionally use **Extract with AI** to "
+        "pre-fill fields from a free-text description — all values must be reviewed "
+        "and confirmed before the item is added."
     )
 
     if not st.session_state.case_context:
@@ -285,13 +289,81 @@ with tab2:
 
         # ---- ADD EVIDENCE FORM ----
         with st.expander("➕ Add a new evidence item", expanded=True):
+
+            # ------------------------------------------------------------------
+            # AI EXTRACTION PANEL (outside the form — needs its own submit)
+            # ------------------------------------------------------------------
+            st.markdown("#### AI-Assisted Feature Extraction *(optional)*")
+            st.caption(
+                f"Extraction mode: **{extraction_mode_label()}** — "
+                "extracted values are suggestions only. Review every field before adding the item."
+            )
+
+            ex = st.session_state._extraction  # current extraction result (may be empty)
+
+            desc_input = st.text_area(
+                "Evidence description (free text)",
+                value=st.session_state._extract_desc,
+                placeholder=(
+                    "e.g. Blood swab collected from victim's clothing at the scene, "
+                    "stored in sealed forensic bag."
+                ),
+                height=90,
+                key="_desc_textarea",
+            )
+
+            if st.button(
+                "🔍 Extract with AI",
+                help="Analyse the description and suggest field values. You can correct any value before adding.",
+                use_container_width=False,
+            ):
+                if not desc_input.strip():
+                    st.warning("Enter a description before extracting.")
+                else:
+                    with st.spinner("Extracting features…"):
+                        extracted = extract_features(
+                            description=desc_input,
+                            context=ctx,
+                        )
+                    st.session_state._extraction  = extracted
+                    st.session_state._extract_desc = desc_input
+                    ex = extracted
+                    source = extracted.get("_source", "none")
+                    if source == "watsonx.ai":
+                        st.success("✅ Extracted via IBM watsonx.ai. Review all values below.")
+                    elif source == "heuristic":
+                        st.info("ℹ️ Heuristic extraction (no API key). Some fields pre-filled from keywords. Review carefully.")
+                    else:
+                        st.warning("No features could be extracted. Please fill in the form manually.")
+
+            # Helper: show AI badge if field was extracted
+            def _ai_badge(field: str) -> str:
+                if field in ex and "_source" in ex and ex.get("_source") != "none":
+                    return " 🤖"
+                return ""
+
+            st.divider()
+
+            # ------------------------------------------------------------------
+            # EVIDENCE FORM (pre-filled from extraction result where available)
+            # ------------------------------------------------------------------
             with st.form("add_evidence_form", clear_on_submit=True):
                 st.markdown("**Item details**")
-                label = st.text_input("Short label / description", placeholder="e.g. Blood swab from victim's clothing")
+                label = st.text_input(
+                    "Short label / description",
+                    value=desc_input if ex else "",
+                    placeholder="e.g. Blood swab from victim's clothing",
+                )
 
                 col1, col2 = st.columns(2)
                 with col1:
-                    evidence_type = st.selectbox("Evidence Type", EVIDENCE_TYPES)
+                    _et_default = ex.get("evidence_type", EVIDENCE_TYPES[0])
+                    _et_index   = EVIDENCE_TYPES.index(_et_default) if _et_default in EVIDENCE_TYPES else 0
+                    evidence_type = st.selectbox(
+                        f"Evidence Type{_ai_badge('evidence_type')}",
+                        EVIDENCE_TYPES,
+                        index=_et_index,
+                    )
                 with col2:
                     st.text_input("Offence Type (from case context)", value=ctx.offence_type, disabled=True)
 
@@ -303,49 +375,57 @@ with tab2:
 
                 col_p, col_d, col_e = st.columns(3)
                 with col_p:
+                    _pv_default = int(ex.get("probative_value", 2)) - 1
                     probative_value = st.selectbox(
-                        "Probative Value (P)",
+                        f"Probative Value (P){_ai_badge('probative_value')}",
                         options=[1, 2, 3],
                         format_func=lambda v: ORDINAL_LABELS[v],
-                        index=1,
+                        index=max(0, min(2, _pv_default)),
                         help="How strongly does this evidence tend to prove or disprove a fact?",
                     )
                 with col_d:
+                    _per_default = int(ex.get("perishability", 1)) - 1
                     perishability = st.selectbox(
-                        "Degradation Risk (D)",
+                        f"Degradation Risk (D){_ai_badge('perishability')}",
                         options=[1, 2, 3],
                         format_func=lambda v: {1: "Stable (1)", 2: "Degrades over days (2)", 3: "Degrades in hours (3)"}[v],
-                        index=0,
+                        index=max(0, min(2, _per_default)),
                         help="How quickly does this evidence degrade without processing?",
                     )
                 with col_e:
+                    _ep_default = int(ex.get("exclusionary_power", 2)) - 1
                     exclusionary_power = st.selectbox(
-                        "Exclusionary Power (E)",
+                        f"Exclusionary Power (E){_ai_badge('exclusionary_power')}",
                         options=[1, 2, 3],
                         format_func=lambda v: ORDINAL_LABELS[v],
-                        index=1,
+                        index=max(0, min(2, _ep_default)),
                         help="How effectively can this evidence exclude suspects?",
                     )
 
                 st.markdown("**Secondary features**")
                 col_a, col_b, col_c = st.columns(3)
                 with col_a:
+                    _cr_default = int(ex.get("contamination_risk", 1)) - 1
                     contamination_risk = st.selectbox(
-                        "Contamination Risk",
+                        f"Contamination Risk{_ai_badge('contamination_risk')}",
                         options=[1, 2, 3],
                         format_func=lambda v: ORDINAL_LABELS[v],
-                        index=0,
+                        index=max(0, min(2, _cr_default)),
                     )
                 with col_b:
+                    _sr_default = int(ex.get("specialist_required", 0))
                     specialist_required = st.selectbox(
-                        "Specialist Required",
+                        f"Specialist Required{_ai_badge('specialist_required')}",
                         options=[0, 1],
                         format_func=lambda v: BINARY_LABELS[v],
+                        index=max(0, min(1, _sr_default)),
                     )
                 with col_c:
+                    _lt_default = int(ex.get("testing_lead_time", 7))
                     testing_lead_time = st.number_input(
-                        "Testing Lead Time (days)",
-                        min_value=1, max_value=60, value=7,
+                        f"Testing Lead Time (days){_ai_badge('testing_lead_time')}",
+                        min_value=1, max_value=60,
+                        value=max(1, min(60, _lt_default)),
                         help="Approximate laboratory turnaround in days. Shorter = faster (higher S).",
                     )
 
@@ -359,24 +439,35 @@ with tab2:
                              "Used for urgency assessment only — not an ML feature.",
                     )
                 with col_op2:
+                    _ec_default = int(ex.get("evidence_condition", 2)) - 1
                     evidence_condition = st.selectbox(
-                        "Evidence Condition",
+                        f"Evidence Condition{_ai_badge('evidence_condition')}",
                         options=[1, 2, 3],
                         format_func=lambda v: {1: "Poor (1)", 2: "Fair (2)", 3: "Good (3)"}[v],
-                        index=1,
+                        index=max(0, min(2, _ec_default)),
                     )
                 with col_op3:
                     specialist_type = st.text_input(
-                        "Specialist Type (optional)",
+                        f"Specialist Type (optional){_ai_badge('specialist_type')}",
+                        value=ex.get("specialist_type", ""),
                         placeholder="e.g. DNA analyst",
                     )
 
-                add_submitted = st.form_submit_button("Add Evidence Item", use_container_width=True)
+                if ex and any(k not in ("_source", "_partial") for k in ex):
+                    st.info(
+                        f"🤖 Fields marked with **🤖** were suggested by AI extraction "
+                        f"({ex.get('_source', 'unknown')} mode). "
+                        "Review and correct them before adding the item. "
+                        "**All AI suggestions require investigator confirmation.**"
+                    )
+
+                add_submitted = st.form_submit_button("✅ Add Evidence Item", use_container_width=True)
 
             if add_submitted:
                 if not label.strip():
                     st.error("Label / description is required.")
                 else:
+                    _ai_extracted = bool(ex and any(k not in ("_source", "_partial") for k in ex))
                     new_item = EvidenceItem(
                         item_id=_next_item_id(),
                         label=label.strip(),
@@ -391,6 +482,7 @@ with tab2:
                         collection_age_hours=int(collection_age_hours),
                         evidence_condition=evidence_condition,
                         specialist_type=specialist_type.strip(),
+                        ai_extracted=_ai_extracted,
                     )
                     errors = validate_item(new_item)
                     if errors:
@@ -398,12 +490,15 @@ with tab2:
                             st.error(e)
                     else:
                         st.session_state.evidence_items.append(new_item)
-                        # Reset triage when evidence changes
+                        # Clear extraction cache and reset triage state
+                        st.session_state._extraction  = {}
+                        st.session_state._extract_desc = ""
                         st.session_state.triage_run     = False
                         st.session_state.triage_results = []
                         st.session_state.schedule       = []
                         st.session_state.schedule_built = False
-                        st.success(f"Item added: **{new_item.item_id}** — {new_item.label}")
+                        ai_note = " *(AI-assisted)*" if _ai_extracted else ""
+                        st.success(f"Item added: **{new_item.item_id}** — {new_item.label}{ai_note}")
 
         # ---- EVIDENCE LIST ----
         items = st.session_state.evidence_items
