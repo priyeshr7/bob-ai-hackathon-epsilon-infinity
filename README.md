@@ -12,7 +12,7 @@
 |---|---|
 | **Team Name** | Epsilon Infinity |
 | **Track** | AI |
-| **Team Lead** | Praveen |
+| **Team Lead** | Priyesh Raj |
 
 ---
 
@@ -72,7 +72,7 @@ decision-maker.**
 | **UI Framework** | Streamlit |
 | **ML** | scikit-learn (Decision Tree, Random Forest, Gradient Boosting) |
 | **Data** | pandas, numpy |
-| **IBM Technologies** | IBM watsonx.ai (`granite-13b-instruct-v2`), IBM Bob |
+| **IBM Technologies** | IBM watsonx.ai (docking), IBM Bob |
 | **Other** | python-dotenv, pytest |
 
 ---
