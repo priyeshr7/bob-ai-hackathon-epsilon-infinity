@@ -2,15 +2,15 @@ team:
   name: "Epsilon Infinity"
   track: "AI"
   lead:
-    name: "Praveen"
-    email: ""
+    name: "Priyesh Raj"
+    email: "Priyeshr067@gmail.com"
   members:
-    - name: ""
-      email: ""
-    - name: ""
-      email: ""
-    - name: ""
-      email: ""
+    - name: "Praveen Gundyagol"
+      email: "praveengundyagol@gmail.com"
+    - name: "Gopal Gawande"
+      email: "gawandegopal004@gmail.com"
+    - name: "Kritivardhan Singh"
+      email: "vardhanhkm@gmail.com"
 
 submission:
   title: "EvidencePro — AI-Assisted Forensic Evidence Triage"
@@ -46,7 +46,7 @@ submission:
   tech_stack:
     languages: ["Python 3.10+"]
     frameworks: ["Streamlit", "scikit-learn", "pandas", "numpy"]
-    ibm_technologies: ["IBM watsonx.ai (granite-13b-instruct-v2, optional)", "IBM Bob"]
+    ibm_technologies: ["IBM watsonx.ai (docling)", "IBM Bob"]
     databases: []
     other: ["python-dotenv", "pytest"]
 
