@@ -1,129 +1,192 @@
-# 🚀 [Your Project Title Here]
+# EvidencePro — AI-Assisted Forensic Evidence Triage
 
-> ⚠️ **Replace everything in `[ ]` brackets with your actual content before submission.**
+> A Streamlit platform that helps police investigators prioritise, explain, and
+> schedule crime-scene evidence submissions to a Forensic Science Laboratory (FSL).
+> Built for the IBM Bob AI Hackathon — Problem 3: AI-Based Crime Scene Evidence Prioritisation.
 
 ---
 
-## 👥 Team
+## Team
 
 | Field | Value |
 |---|---|
-| **Team Name** |[Epsilon Infinity ]|
-| **Track** | [ AI] |
-| **Team Lead** | [Priyesh Raj] — [Priyeshr067@gmail.com] |
-| **Members** | [Gopal Gawande], [Praveen Gundyagol]|
+| **Team Name** | Epsilon Infinity |
+| **Track** | AI |
+| **Team Lead** | Praveen |
 
 ---
 
-## 🎯 Problem Statement
+## Problem Statement
 
-> In 2–3 sentences: What problem does your project solve? Who experiences this problem?
-
-[Crime scene investigators are routinely overwhelmed by volume — the 2019 Hyderabad veterinarian murder case alone produced 3,000+ photos and 200+ physical items — with no systematic way to decide what gets examined first. Without prioritization, perishable, high-value evidence (a DNA-bearing cigarette butt was nearly missed in that case) can be buried under low-value items, while backlogged Forensic Science Laboratories (FSLs) add weeks of delay on top.
-
-]
-
----
-
-## 💡 Solution
-
-> In 2–3 sentences: What did you build? How does it solve the problem above?
-
-[We built **Evidence Pro**, an AI-powered evidence triage assistant with two engines, both running on IBM watsonx.ai. For photos, watsonx's Granite Vision model scans crime scene images and flags probable evidence categories and time-sensitive items directly. For written item lists, watsonx's Granite text model extracts only observable facts from each description (not a priority judgment), which a trained decision tree then classifies deterministically — returning the exact split-by-split reasoning behind every ranking, so investigators get a fully explainable, ranked FSL submission schedule instead of a black-box score.
-]
+Forensic investigators must decide which evidence items to submit to an FSL
+first — without any AI support. These decisions are informal, inconsistent, and
+prone to overlooking time-sensitive degradable evidence. Delayed processing of
+perishable evidence (biological samples, gunshot residue, toxicology) can
+compromise prosecutions and result in irreversible evidence loss.
 
 ---
 
-## ✨ Key Features
+## Solution
 
-- **Feature 1:** [**Vision-based photo triage:** IBM watsonx.ai's Granite Vision model scans crime scene photographs directly and classifies each into a forensic evidence category, targeting the exact "3,000-photo, missed cigarette butt" failure mode from the Hyderabad case.
-]
-- **Feature 2:** [**Explainable decision-tree prioritization:** A trained `DecisionTreeClassifier` assigns each item's priority tier and returns the literal sequence of yes/no splits it followed — every "why is this Critical?" has a concrete, auditable answer instead of an opaque LLM-generated score.
-]
-- **Feature 3:** [**Gen AI narrowed to fact-extraction, not judgment:** watsonx's Granite text model only pulls structured, observable features from free text (is it biological? exposed to weather? a locked device?) — keeping the AI's role low-risk while the tree does all actual prioritizing.
-]
-- **Feature 4:** [**Perishability-aware urgency flagging:** Both engines flag time-sensitive evidence (DNA degradation, volatile accelerants, devices at risk of battery loss or remote wipe) so fragile evidence surfaces regardless of raw score.
-]
-- **Feature 5:** [**Ranked, tiered FSL schedule:** Outputs a Critical/High/Standard/Low examination schedule with per-category FSL section and turnaround estimates, built iteratively by running every item through the tree and sorting the results.
-]
+EvidencePro is a Streamlit-based AI-assisted triage platform that:
+
+1. Accepts free-text evidence descriptions and uses IBM watsonx.ai (or
+   heuristic keyword matching) to extract structured feature values
+2. Runs three ML models (Decision Tree, Random Forest, Gradient Boosting)
+   across four forensic PDES dimensions to recommend a priority tier
+3. Flags time-sensitive evidence as urgent based on perishability and
+   collection age
+4. Lets investigators accept or override every AI recommendation with a
+   mandatory recorded reason
+5. Produces a deterministic, three-batch FSL examination schedule
+6. Generates a downloadable Markdown report with full disclaimers and
+   investigator decision audit trail
+
+**All AI/ML outputs are recommendations only. The investigator is the final
+decision-maker.**
 
 ---
 
-## 🛠️ Tech Stack
+## Key Features
+
+- **Three-model ML triage** — Decision Tree, Random Forest, and Gradient
+  Boosting with cross-validated accuracy and per-item explanations
+- **IBM watsonx.ai NLP extraction** — free-text description auto-populates
+  form fields via `granite-13b-instruct-v2`; graceful heuristic fallback
+  without an API key
+- **Deterministic FSL batch scheduler** — Batch 1: Immediate, Batch 2:
+  Secondary, Batch 3: Archive — with transparent, documented rules
+- **Human-in-the-loop review** — mandatory reason required for every override;
+  full audit trail in the report
+- **Policy governance layer** — Policy Admin proposes PDES weight adjustments;
+  Approver must approve before activation; raw ML and policy-adjusted results
+  always shown side-by-side
+
+---
+
+## Tech Stack
 
 | Category | Technologies |
 |---|---|
-| **Languages** | [Python, JavaScript, HTML, CSS] |
-| **Frameworks** | [Flask, Flask-CORS] |
-| **IBM Technologies** | [] |
-| **Databases** | [None — stateless request/response pipeline ] |
-| **Other** | [scikit-learn (trained `DecisionTreeClassifier`), joblib (model serialization)] |
+| **Language** | Python 3.10+ |
+| **UI Framework** | Streamlit |
+| **ML** | scikit-learn (Decision Tree, Random Forest, Gradient Boosting) |
+| **Data** | pandas, numpy |
+| **IBM Technologies** | IBM watsonx.ai (`granite-13b-instruct-v2`), IBM Bob |
+| **Other** | python-dotenv, pytest |
 
 ---
 
-## 📁 Repository Structure
+## Repository Structure
 
 ```
-├── src/                  # All source code
-├── docs/                 # Written documentation
-│   ├── problem-statement.md
-│   ├── solution-overview.md
-│   ├── architecture.md
-│   └── setup-guide.md
-├── demo/                 # Demo artifacts
-│   ├── screenshots/      # App screenshots
-│   └── demo-video-link.txt  # Link to demo video
-├── presentation/         # Slide deck
-└── submission.yaml       # Structured submission metadata
+src/
+  app.py                    Streamlit UI (presentation/orchestration only)
+  extractor.py              AI/NLP feature extraction (watsonx.ai + heuristic)
+  scheduler.py              Deterministic FSL batch scheduler
+  report.py                 Markdown report generator
+  evidence_triage.py        FROZEN baseline (never modified)
+  run_triage.py             FROZEN CLI harness (never modified)
+  models/
+    evidence_item.py        EvidenceItem + CaseContext dataclasses
+    triage_models.py        ML module: DT / RF / GB training and prediction
+    policy.py               PDES policy layer + governance workflow
+  data/
+    synthetic_dataset.py    148-row synthetic training dataset
+  tests/
+    test_triage_models.py   Unit tests: ML module (33 tests)
+    test_scheduler.py       Unit tests: FSL scheduler (14 tests)
+    test_report.py          Unit tests: report generator (14 tests) + 2 tests
+
+docs/                       Architecture, setup guide, problem statement, solution overview
+submission.yaml             Hackathon submission metadata
+requirements.txt            pip dependencies
 ```
 
 ---
 
-## ⚡ How to Run
-
-> **Copy these exact steps from your [`docs/setup-guide.md`](docs/setup-guide.md)**
+## How to Run
 
 ```bash
 # 1. Clone the repo
-git clone https://github.com/[your-repo].git
-cd [your-repo]
+git clone https://github.com/ibm-build-lab/bob-ai-hackathon-epsilon-infinity.git
+cd bob-ai-hackathon-epsilon-infinity
 
 # 2. Install dependencies
-[your install command here]
+pip install -r requirements.txt
 
-# 3. Configure environment
-cp .env.example .env
-# Edit .env with your values
+# 3. (Optional) Configure watsonx.ai credentials
+cp src/.env.example src/.env
+# Edit src/.env — leave blank to use heuristic extraction
 
-# 4. Run the project
-[your run command here]
+# 4. Launch the application
+streamlit run src/app.py
+```
+
+The application opens at `http://localhost:8501`.
+
+See [`docs/setup-guide.md`](docs/setup-guide.md) for full instructions.
+
+---
+
+## Demo
+
+| Artifact | Link |
+|---|---|
+| Demo Video | [See demo/demo-video-link.txt](demo/demo-video-link.txt) |
+| Live Demo | [See demo/live-demo-url.txt](demo/live-demo-url.txt) |
+| Screenshots | [See demo/screenshots/](demo/screenshots/) |
+| Presentation | [See presentation/](presentation/) |
+
+---
+
+## Running Tests
+
+```bash
+pip install pytest
+python -m pytest src/tests/ -v
+# Expected: 63 tests passed
 ```
 
 ---
 
-## 🖥️ Demo
+## Known Limitations
 
-| Artifact | Link |
-|---|---|
-| 📹 Demo Video | [See demo/demo-video-link.txt](demo/demo-video-link.txt) |
-| 🌐 Live Demo | [See demo/live-demo-url.txt](demo/live-demo-url.txt) |
-| 🖼️ Screenshots | [See demo/screenshots/](demo/screenshots/) |
-| 📊 Presentation | [See presentation/slides.pdf](presentation/) |
-
----
-
-## ⚠️ Known Limitations
-
-> Be honest — judges appreciate transparency over overclaiming.
-
-- [Limitation 1: e.g., "Authentication is mocked — not production-ready"]
-- [Limitation 2: e.g., "Only tested on Chrome"]
-- [Limitation 3: e.g., "Feature X is scaffolded but not fully implemented"]
+- ML models are trained on a **148-row synthetic dataset** — accuracy figures
+  are demonstrative only and do not represent real-world forensic performance
+- Session state is **lost on page refresh** — no persistent database in this
+  prototype
+- Role selection in Policy Admin tab is a **simulation only** — no real
+  authentication
+- watsonx.ai extraction requires an IBM Cloud API key and `ibm-watsonx-ai`
+  package; without these, heuristic extraction or manual entry is used
+- PDES policy weights are a **configurable prototype mechanism**, not
+  peer-reviewed forensic standards
 
 ---
 
-## 🏅 What We're Most Proud Of
+## What We're Most Proud Of
 
-[We are doing the crazy work out here , everything is absolute legendary.]
+The **human-in-the-loop design** and **explainability architecture**:
+
+Every AI recommendation is labelled as a recommendation. The investigator
+explicitly accepts or overrides each one with a mandatory recorded reason.
+Decision Tree predictions show the exact per-item node-by-node rule path.
+Random Forest and Gradient Boosting predictions show the item's own feature
+values alongside global model importances — with a prominent disclaimer that
+these are NOT per-item causal explanations. This transparency design directly
+addresses the trust and accountability requirements for forensic applications.
 
 ---
+
+> ⚠️ **IMPORTANT DISCLAIMERS**
+>
+> All AI/ML outputs in EvidencePro are **recommendations only**.
+> The investigator is the **final decision-maker** for all triage and
+> evidence submission decisions.
+>
+> Accuracy figures are from a **synthetic/demonstration dataset** and do not
+> represent real-world forensic performance.
+>
+> Policy weights are a **CONFIGURABLE PROTOTYPE MECHANISM** and are NOT
+> official forensic standards.

@@ -1,0 +1,10 @@
+scikit-learn
+pandas
+numpy
+streamlit>=1.32.0
+python-dotenv
+
+# Optional — AI/NLP evidence extraction via IBM watsonx.ai.
+# The application works fully without this package (falls back to heuristic
+# keyword extraction or manual form entry).
+# ibm-watsonx-ai
