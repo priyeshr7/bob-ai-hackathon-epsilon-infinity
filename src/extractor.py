@@ -571,3 +571,31 @@ def extraction_mode_label() -> str:
     if is_watsonx_available():
         return "AI extraction via IBM watsonx.ai"
     return "Heuristic extraction (no API key configured)"
+
+
+def resolve_extraction_cache(
+    cached_ex: dict,
+    source_desc: str,
+    current_desc: str,
+) -> dict:
+    """
+    Return the cached extraction dict if and only if it was produced from the
+    same description currently in the evidence form.
+
+    Rules
+    -----
+    - Both descriptions are stripped of leading/trailing whitespace before
+      comparison.  Accidental whitespace must not silently drop a valid
+      extraction, but any substantive text change invalidates the cache.
+    - An empty cached dict is treated as no extraction regardless of description.
+    - If the descriptions do not match, {} is returned so all form fields
+      fall back to neutral defaults.
+
+    This function is pure Python with no Streamlit dependency so it can be
+    unit-tested directly without a running Streamlit session.
+    """
+    if not cached_ex:
+        return {}
+    if current_desc.strip() == source_desc.strip():
+        return cached_ex
+    return {}
